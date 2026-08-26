@@ -33,10 +33,12 @@ export interface LocaleService {
   getSnapshot(): { active: string }
 }
 
-/** The client sessions list face this plugin uses (current-session change). */
+/** The client sessions list feed this plugin uses (current-session change). */
 export interface SessionsService {
-  subscribe(listener: () => void): () => void
-  getListSnapshot(): { current: unknown }
+  list: {
+    getSnapshot(): { current: unknown }
+    subscribe(listener: () => void): () => void
+  }
 }
 
 /** The layout service face (details panel control). */

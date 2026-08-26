@@ -60,9 +60,9 @@ export function apply(ctx: Context): void {
   // Selecting a session while a view is active means "back to the chat
   // workspace": close the view so the conversation returns with the picked
   // session. Only the CURRENT id matters — other list churn is ignored.
-  let lastCurrent: unknown = ctx.sessions.getListSnapshot().current
-  const offSessions = ctx.sessions.subscribe(() => {
-    const current = ctx.sessions.getListSnapshot().current
+  let lastCurrent: unknown = ctx.sessions.list.getSnapshot().current
+  const offSessions = ctx.sessions.list.subscribe(() => {
+    const current = ctx.sessions.list.getSnapshot().current
     if (current === lastCurrent) return
     lastCurrent = current
     if (service.getSnapshot().activeId !== null) service.close()
