@@ -33,6 +33,17 @@ export interface LocaleService {
   getSnapshot(): { active: string }
 }
 
+/** The client sessions list face this plugin uses (current-session change). */
+export interface SessionsService {
+  subscribe(listener: () => void): () => void
+  getListSnapshot(): { current: unknown }
+}
+
+/** The layout service face (details panel control). */
+export interface LayoutService {
+  closeDetails(): void
+}
+
 declare module 'cordis' {
   interface Context {
     /** The DSH-vendored lifecycle helper (auto-disposes the returned disposer). */
@@ -45,6 +56,10 @@ declare module 'cordis' {
     slots: SlotsService
     /** The client locale service (provided by the locale plugin). */
     locale: LocaleService
+    /** The client sessions list service (provided by the client runtime). */
+    sessions: SessionsService
+    /** The layout service (provided by ui-layout). */
+    layout: LayoutService
   }
 }
 
@@ -55,5 +70,7 @@ declare module '@deepseek-ai/cordis' {
     provide(name: string, value: unknown): unknown
     slots: SlotsService
     locale: LocaleService
+    sessions: SessionsService
+    layout: LayoutService
   }
 }

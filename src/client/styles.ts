@@ -13,14 +13,13 @@ export const PREFIX = 'dshav'
 const STYLE_ID = 'dsh-app-views-styles'
 
 const RULES = `
-.${PREFIX}-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
+.${PREFIX}-panel {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
   background: var(--dsw-alias-bg-base);
-  pointer-events: auto;
 }
 .${PREFIX}-header {
   display: flex;

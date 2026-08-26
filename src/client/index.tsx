@@ -1,12 +1,13 @@
 /**
- * dsh-app-views browser half: publishes the `appViews` service, registers
- * the full-page overlay layer into the shell's `shell.overlay` slot, and
- * attaches the plugin's locale namespace. The chat workspace stays mounted
- * underneath the layer — switching views never unmounts it.
+ * dsh-app-views browser half: publishes the `appViews` service and swaps
+ * the CENTER display area — while a view is active, a priority shadow
+ * occupies the `conversation` slot, so the left sidebar (session list +
+ * view entries) and the frame chrome never move. Selecting a session in
+ * the sidebar closes the active view and returns to the chat workspace.
  */
 import type { Context } from 'cordis'
 import { createAppViewsService } from './service.ts'
-import { AppViewLayer } from './view-layer.tsx'
+import { AppViewPanel } from './view-panel.tsx'
 import { injectStyles } from './styles.ts'
 import { attachLocale, en, LOCALE_NS, zh } from './i18n.ts'
 import type { AppViewsService } from './types.ts'
@@ -14,9 +15,9 @@ import type { AppViewsService } from './types.ts'
 export type { AppViewDescriptor, AppViewRenderProps, AppViewsService, AppViewsSnapshot } from './types.ts'
 
 /** Services required before activation. */
-export const inject = ['slots', 'locale'] as const
+export const inject = ['slots', 'locale', 'sessions', 'layout'] as const
 
-/** Client plugin body (runs once slots and locale are provided). */
+/** Client plugin body (runs once the injected services are provided). */
 export function apply(ctx: Context): void {
   injectStyles()
   attachLocale(ctx.locale)
@@ -28,13 +29,51 @@ export function apply(ctx: Context): void {
   const service = createAppViewsService(ctx.slots)
   ctx.provide('appViews', service)
 
-  // The overlay layer occupies the shell's overlay list slot (above the
-  // frame, below the command palette's z-100 popup). It renders nothing
-  // while no view is active, so the default workspace is pixel-identical.
-  ctx.effect(
-    () => ctx.slots.register({ name: 'shell.overlay', id: 'dsh-app-views', order: 50 }, () => AppViewLayer({ service })),
-    'dsh-app-views: overlay layer registration',
-  )
+  // Center-display swap: while a view is active, a priority -10 shadow of
+  // the `conversation` slot renders the panel; disposing it returns the
+  // original conversation occupant. `slots.inject` waits for the slot's
+  // declaration and re-runs the registration after a redeclaration, so the
+  // shadow never registers into an undeclared slot. Opening a view closes
+  // the details panel (desktop column / mobile sheet) for a clean swap.
+  let disposeShadow: (() => void) | undefined
+  const syncShadow = (): void => {
+    const active = service.getSnapshot().activeId !== null
+    if (active) {
+      ctx.layout.closeDetails()
+      if (disposeShadow === undefined) {
+        ctx.slots.inject('conversation', () => {
+          if (service.getSnapshot().activeId === null || disposeShadow !== undefined) return
+          disposeShadow = ctx.slots.register(
+            { name: 'conversation', priority: -10 },
+            () => AppViewPanel({ service }),
+          )
+        })
+      }
+    } else if (disposeShadow !== undefined) {
+      disposeShadow()
+      disposeShadow = undefined
+    }
+  }
+  const offViews = service.subscribe(syncShadow)
+  syncShadow()
+
+  // Selecting a session while a view is active means "back to the chat
+  // workspace": close the view so the conversation returns with the picked
+  // session. Only the CURRENT id matters — other list churn is ignored.
+  let lastCurrent: unknown = ctx.sessions.getListSnapshot().current
+  const offSessions = ctx.sessions.subscribe(() => {
+    const current = ctx.sessions.getListSnapshot().current
+    if (current === lastCurrent) return
+    lastCurrent = current
+    if (service.getSnapshot().activeId !== null) service.close()
+  })
+
+  ctx.effect(() => () => {
+    offViews()
+    offSessions()
+    disposeShadow?.()
+    disposeShadow = undefined
+  }, 'dsh-app-views: shadow lifecycle')
 }
 
 declare module 'cordis' {
