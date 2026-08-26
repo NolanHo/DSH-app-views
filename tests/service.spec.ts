@@ -2,24 +2,9 @@
  * The appViews service core: ledger, active state, footer entry lifecycle.
  * The slots service is faked; components are not mounted (node env).
  */
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createAppViewsService } from '../src/client/service.ts'
 import type { AppViewDescriptor, AppViewsService } from '../src/client/types.ts'
-import type { SlotsService } from '../src/shims.d.ts'
-
-/** A minimal fake slots service capturing registrations per key. */
-function fakeSlots() {
-  const registrations: { options: Record<string, unknown> }[] = []
-  const register = vi.fn((options: Record<string, unknown>) => {
-    registrations.push({ options })
-    return () => {
-      const index = registrations.findIndex(entry => entry.options === options)
-      if (index >= 0) registrations.splice(index, 1)
-    }
-  })
-  const inject = vi.fn((_key: string, callback: () => void) => { callback() })
-  return { registrations, register, inject: inject as SlotsService['inject'] }
-}
 
 function view(id: string, overrides: Partial<AppViewDescriptor> = {}): AppViewDescriptor {
   return {
@@ -30,10 +15,8 @@ function view(id: string, overrides: Partial<AppViewDescriptor> = {}): AppViewDe
   }
 }
 
-function makeService(): { service: AppViewsService; slots: ReturnType<typeof fakeSlots> } {
-  const slots = fakeSlots()
-  const service = createAppViewsService(slots as unknown as SlotsService)
-  return { service, slots }
+function makeService(): { service: AppViewsService } {
+  return { service: createAppViewsService() }
 }
 
 describe('createAppViewsService', () => {
@@ -42,16 +25,13 @@ describe('createAppViewsService', () => {
     expect(service.getSnapshot()).toEqual({ views: [], activeId: null })
   })
 
-  it('registerView adds the view, notifies, and creates the sidebar footer entry', () => {
-    const { service, slots } = makeService()
+  it('registerView adds the view and notifies subscribers', () => {
+    const { service } = makeService()
     const seen: number[] = []
     service.subscribe(() => { seen.push(1) })
     service.registerView(view('github'))
     expect(service.getSnapshot().views.map(v => v.id)).toEqual(['github'])
     expect(seen.length).toBe(1)
-    const footers = slots.registrations.filter(entry => String((entry.options as { name?: unknown }).name) === 'sidebar.footer.action')
-    expect(footers.length).toBe(1)
-    expect((footers[0]?.options as { id?: string }).id).toBe('dsh-app-views:github')
   })
 
   it('rejects a duplicate view id and leaves the ledger unchanged', () => {
@@ -76,13 +56,12 @@ describe('createAppViewsService', () => {
     expect(service.getSnapshot().activeId).toBeNull()
   })
 
-  it('unregistering a view removes its footer entry and its active state', () => {
-    const { service, slots } = makeService()
+  it('unregistering a view removes it and its active state', () => {
+    const { service } = makeService()
     const dispose = service.registerView(view('github'))
     service.open('github')
     dispose()
     expect(service.getSnapshot()).toEqual({ views: [], activeId: null })
-    expect(slots.registrations.filter(entry => String((entry.options as { name?: unknown }).name) === 'sidebar.footer.action').length).toBe(0)
   })
 
   it('notifies subscribers on open and close', () => {
@@ -95,12 +74,11 @@ describe('createAppViewsService', () => {
     expect(seen).toEqual(['github', 'null'])
   })
 
-  it('re-activation after disposal re-registers the footer entry (HMR safety)', () => {
-    const { service, slots } = makeService()
+  it('re-registering after disposal works (HMR safety)', () => {
+    const { service } = makeService()
     const dispose = service.registerView(view('github'))
     dispose()
     service.registerView(view('github'))
-    const footers = slots.registrations.filter(entry => String((entry.options as { name?: unknown }).name) === 'sidebar.footer.action')
-    expect(footers.length).toBe(1)
+    expect(service.getSnapshot().views.map(v => v.id)).toEqual(['github'])
   })
 })

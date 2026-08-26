@@ -13,6 +13,7 @@ export const LOCALE_NS = 'app-views'
 export const zh = {
   back: '返回聊天',
   viewFailed: '该视图渲染失败',
+  views: '应用',
 } satisfies Record<string, string>
 
 /** The copy key union. */
@@ -22,6 +23,7 @@ export type CopyKey = keyof typeof zh
 export const en = {
   back: 'Back to chat',
   viewFailed: 'This view failed to render',
+  views: 'Apps',
 } satisfies Record<CopyKey, string>
 
 /** The attached locale service (module-level: copy only, no component state). */

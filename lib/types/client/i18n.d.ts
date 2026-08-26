@@ -11,6 +11,7 @@ export declare const LOCALE_NS = "app-views";
 export declare const zh: {
     back: string;
     viewFailed: string;
+    views: string;
 };
 /** The copy key union. */
 export type CopyKey = keyof typeof zh;
@@ -18,6 +19,7 @@ export type CopyKey = keyof typeof zh;
 export declare const en: {
     back: string;
     viewFailed: string;
+    views: string;
 };
 /**
  * Attach the DSH locale service for language resolution.

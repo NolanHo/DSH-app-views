@@ -8,6 +8,7 @@
 import type { Context } from 'cordis'
 import { createAppViewsService } from './service.ts'
 import { AppViewPanel } from './view-panel.tsx'
+import { SidebarViewsNav } from './view-entry.tsx'
 import { injectStyles } from './styles.ts'
 import { attachLocale, en, LOCALE_NS, zh } from './i18n.ts'
 import type { AppViewsService } from './types.ts'
@@ -26,8 +27,21 @@ export function apply(ctx: Context): void {
     return () => { offZh() }
   }, 'dsh-app-views: dictionaries')
 
-  const service = createAppViewsService(ctx.slots)
+  const service = createAppViewsService()
   ctx.provide('appViews', service)
+
+  // One sidebar footer entry: a vertically stacked nav block rendering every
+  // registered view (the shell's footer container is horizontal — a single
+  // full-width child is what makes the rows stack).
+  ctx.effect(
+    () => ctx.slots.inject('sidebar.footer.action', () => {
+      ctx.slots.register(
+        { name: 'sidebar.footer.action', id: 'dsh-app-views:nav', order: 50 },
+        (owner: unknown) => SidebarViewsNav({ service, owner }),
+      )
+    }),
+    'dsh-app-views: sidebar nav registration',
+  )
 
   // Center-display swap: while a view is active, a priority -10 shadow of
   // the `conversation` slot renders the panel; disposing it returns the

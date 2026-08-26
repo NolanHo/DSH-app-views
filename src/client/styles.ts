@@ -61,35 +61,55 @@ const RULES = `
   padding: 16px;
   color: var(--dsw-alias-label-secondary);
 }
-.${PREFIX}-footerEntry,
-.${PREFIX}-footerEntryRail {
-  display: inline-flex;
+.${PREFIX}-nav,
+.${PREFIX}-navRail {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.${PREFIX}-nav {
+  gap: 2px;
+  padding: 4px 0;
+}
+.${PREFIX}-navRail {
+  gap: 4px;
   align-items: center;
-  gap: 8px;
+}
+.${PREFIX}-navTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-secondary);
+  padding: 0 8px 2px;
+}
+.${PREFIX}-navItem,
+.${PREFIX}-navItemRail {
+  display: flex;
+  align-items: center;
   border: none;
   background: transparent;
   color: var(--dsw-alias-label-primary);
   font: inherit;
   cursor: pointer;
 }
-.${PREFIX}-footerEntry {
+.${PREFIX}-navItem {
+  gap: 8px;
   width: 100%;
   padding: 6px 8px;
   border-radius: 6px;
   text-align: left;
 }
-.${PREFIX}-footerEntry:hover {
+.${PREFIX}-navItem:hover {
   background: var(--dsw-alias-bg-l2);
 }
-.${PREFIX}-footerEntryRail {
+.${PREFIX}-navItemRail {
   justify-content: center;
   padding: 6px;
   border-radius: 6px;
 }
-.${PREFIX}-footerEntryRail:hover {
+.${PREFIX}-navItemRail:hover {
   background: var(--dsw-alias-bg-l2);
 }
-.${PREFIX}-footerIcon {
+.${PREFIX}-navIcon {
   display: inline-flex;
   align-items: center;
 }
