@@ -1,6 +1,6 @@
 {
   "name": "dsh-app-views",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "DSH plugin: app-level view registry — full-page overlay views over the chat workspace, with sidebar footer entries.",
   "type": "module",
   "repository": {

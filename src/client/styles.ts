@@ -9,8 +9,11 @@
 /** The shared class prefix (avoids collisions with host-page classes). */
 export const PREFIX = 'dshav'
 
-/** One stylesheet tag id (installed once per page, even across HMR). */
+/** One stylesheet tag id. */
 const STYLE_ID = 'dsh-app-views-styles'
+
+/** The loader entry id (must equal the HMR style-cleanup attribute). */
+const PLUGIN_ID = 'dsh-app-views'
 
 const RULES = `
 .${PREFIX}-panel {
@@ -120,9 +123,14 @@ const RULES = `
  * @returns true when this call installed the tag.
  */
 export function injectStyles(): boolean {
-  if (document.getElementById(STYLE_ID) !== null) return false
+  // Self-healing: drop any previous tag with our id (including tags from
+  // older bundles that predate the data-plugin attribute), then inject the
+  // current rules. The HMR reload driver also removes owned tags by
+  // data-plugin, so the stylesheet always matches the running bundle.
+  document.getElementById(STYLE_ID)?.remove()
   const style = document.createElement('style')
   style.id = STYLE_ID
+  style.setAttribute('data-plugin', PLUGIN_ID)
   style.textContent = RULES
   document.head.appendChild(style)
   return true
