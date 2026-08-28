@@ -54,6 +54,10 @@ export function apply(ctx: Context): void {
     const active = service.getSnapshot().activeId !== null
     if (active) {
       ctx.layout.closeDetails()
+      // Mobile: the drawer slides over the single-track center column;
+      // an app view owns the column now, so the drawer must close like it
+      // does on session selection.
+      ;(ctx.layout as { closeDrawer?: () => void }).closeDrawer?.()
       if (disposeShadow === undefined) {
         ctx.slots.inject('conversation', () => {
           if (service.getSnapshot().activeId === null || disposeShadow !== undefined) return

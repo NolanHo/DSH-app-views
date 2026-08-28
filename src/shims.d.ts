@@ -44,6 +44,8 @@ export interface SessionsService {
 /** The layout service face (details panel control). */
 export interface LayoutService {
   closeDetails(): void
+  /** Close the mobile sidebar drawer (no-op when already closed). */
+  closeDrawer?(): void
 }
 
 declare module 'cordis' {
